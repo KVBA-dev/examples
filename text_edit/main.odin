@@ -3,7 +3,7 @@ package main
 /*
 	core:text/edit example
 
-	Ths core package provides procedures for implementing 
+	This core package provides procedures for implementing 
 	famously difficult text input fields. This is a simple example
 	showcasing how to create a single line text edit field.
 */
@@ -32,7 +32,7 @@ IsShiftDown :: proc() -> bool {
 
 main :: proc() {
 	/* Creating a window.
-	   Using "defer" just after that to not forget
+	   Using "defer" just after that to remember
 	   to close the window! */
 	rl.InitWindow(1024, 800, "core:text/edit example")
 	defer rl.CloseWindow()
@@ -45,7 +45,7 @@ main :: proc() {
 
 	/* This is the edit state. 
 	   It stores information about current selection, caret position,
-	   undo and redo lists, and clipboard interface. */
+	   undo and redo arrays, and clipboard interface. */
 	state: edit.State
 
 	/* Initialise the edit state, we pass default allocator
@@ -61,10 +61,9 @@ main :: proc() {
 
 	/* Main loop */
 	for !rl.WindowShouldClose() {
-		/* Update the time for the state.
-		   Useful with undo operation. 
+		/* Update the time for the state. Useful with undo operation. 
 		   The state struct contains the information about the time since the last edit.
-		   If it exceeds the timeout time, it is then pushed to the undo list.
+		   If it exceeds the timeout, it is then pushed to the undo array.
 		   Default timeout is 300 ms. */
 		edit.update_time(&state)
 
@@ -103,11 +102,11 @@ main :: proc() {
 		   - Shift + Ctrl + arrow combines both operations */
 		if IsKeyHeld(.LEFT) {
 			cmd := edit.Command.Left
-			if (rl.IsKeyDown(.LEFT_SHIFT) || rl.IsKeyDown(.RIGHT_SHIFT)) && (rl.IsKeyDown(.LEFT_CONTROL) || rl.IsKeyDown(.RIGHT_CONTROL)) {
+			if IsShiftDown() && IsControlDown() {
 				cmd = .Select_Word_Left
-			} else if rl.IsKeyDown(.LEFT_CONTROL) || rl.IsKeyDown(.RIGHT_CONTROL) {
+			} else if IsControlDown() {
 				cmd = .Word_Left
-			} else if rl.IsKeyDown(.LEFT_SHIFT) || rl.IsKeyDown(.RIGHT_SHIFT) {
+			} else if IsShiftDown() {
 				cmd = .Select_Left
 			}
 			edit.perform_command(&state, cmd)
@@ -115,11 +114,11 @@ main :: proc() {
 		
 		if IsKeyHeld(.RIGHT) {
 			cmd := edit.Command.Right
-			if (rl.IsKeyDown(.LEFT_SHIFT) || rl.IsKeyDown(.RIGHT_SHIFT)) && (rl.IsKeyDown(.LEFT_CONTROL) || rl.IsKeyDown(.RIGHT_CONTROL)) {
+			if IsShiftDown() && IsControlDown() {
 				cmd = .Select_Word_Right
-			} else if rl.IsKeyDown(.LEFT_CONTROL) || rl.IsKeyDown(.RIGHT_CONTROL) {
+			} else if IsControlDown() {
 				cmd = .Word_Right
-			} else if rl.IsKeyDown(.LEFT_SHIFT) || rl.IsKeyDown(.RIGHT_SHIFT) {
+			} else if IsShiftDown() {
 				cmd = .Select_Right
 			}
 			edit.perform_command(&state, cmd)
@@ -129,7 +128,7 @@ main :: proc() {
 		   - Ctrl + key deletes entire word in the respective direction */
 		if IsKeyHeld(.BACKSPACE) {
 			cmd := edit.Command.Backspace
-			if rl.IsKeyDown(.LEFT_CONTROL) || rl.IsKeyDown(.RIGHT_CONTROL) {
+			if IsControlDown() {
 				cmd = .Delete_Word_Left
 			}
 			edit.perform_command(&state, cmd)
@@ -137,7 +136,7 @@ main :: proc() {
 
 		if IsKeyHeld(.DELETE) {
 			cmd := edit.Command.Delete
-			if rl.IsKeyDown(.LEFT_CONTROL) || rl.IsKeyDown(.RIGHT_CONTROL) {
+			if IsControlDown() {
 				cmd = .Delete_Word_Right
 			}
 			edit.perform_command(&state, cmd)
@@ -150,7 +149,9 @@ main :: proc() {
 		   our string from builder to a cstring */
 		cstr := strings.to_cstring(&builder)
 
-		/* This will be used for determining the position of the caret on screen */
+		/* This will be used for determining the position of the caret on screen. 
+		   Note that for this demo we're using MeasureText, because we use the default
+		   raylib font. If you want to use a different font, look into MeasureTextEx.*/
 		substr := strings.clone_to_cstring(str[:state.selection[0]], context.temp_allocator)
 		caret_x := rl.MeasureText(substr, FONT_SIZE)
 
@@ -176,12 +177,11 @@ main :: proc() {
 
 		rl.DrawRectangle(0, 340, 1024, 70, rl.LIGHTGRAY) // background
 		if edit.has_selection(&state) {                  // selection
-			rl.DrawRectangle(caret_x if caret_x < selection_x else selection_x, 
-                             340, 
+			rl.DrawRectangle(caret_x if caret_x < selection_x else selection_x, // ternary expression! equivalent to
+                             340, 												// caret_x < selection_x ? caret_x : selection_x
                              abs(selection_x - caret_x), 
                              70,
-                             rl.SKYBLUE,
-			)
+                             rl.SKYBLUE)
 		}
 		rl.DrawText(cstr, 0, 350, FONT_SIZE, rl.RED)     // text
 		rl.DrawLine(caret_x, 350, caret_x, 400, rl.RED)  // caret
