@@ -18,15 +18,15 @@ FONT_SIZE :: 50
 /* HELPER PROCEDURES */
 
 /* NOT the same as IsKeyDown */
-IsKeyHeld :: proc(key: rl.KeyboardKey) -> bool {
+is_key_held :: proc(key: rl.KeyboardKey) -> bool {
 	return rl.IsKeyPressed(key) || rl.IsKeyPressedRepeat(key)
 }
 
-IsControlDown :: proc() -> bool {
+is_ctrl_down :: proc() -> bool {
 	return rl.IsKeyDown(.LEFT_CONTROL) || rl.IsKeyDown(.RIGHT_CONTROL)
 }
 
-IsShiftDown :: proc() -> bool {
+is_shift_down :: proc() -> bool {
 	return rl.IsKeyDown(.LEFT_SHIFT) || rl.IsKeyDown(.RIGHT_SHIFT)
 }
 
@@ -62,7 +62,7 @@ main :: proc() {
 		   Default timeout is 300 ms. */
 		edit.update_time(&state)
 
-		if !IsControlDown() {
+		if !is_ctrl_down() {
 			/* Normal input */
 			c := rl.GetCharPressed()
 
@@ -95,25 +95,25 @@ main :: proc() {
 		   - Shift + arrow expands the selection in the direction of the arrow
 		   - Ctrl + arrow moves the caret to the next word
 		   - Shift + Ctrl + arrow combines both operations */
-		if IsKeyHeld(.LEFT) {
+		if is_key_held(.LEFT) {
 			cmd := edit.Command.Left
-			if IsShiftDown() && IsControlDown() {
+			if is_shift_down() && is_ctrl_down() {
 				cmd = .Select_Word_Left
-			} else if IsControlDown() {
+			} else if is_ctrl_down() {
 				cmd = .Word_Left
-			} else if IsShiftDown() {
+			} else if is_shift_down() {
 				cmd = .Select_Left
 			}
 			edit.perform_command(&state, cmd)
 		}
 		
-		if IsKeyHeld(.RIGHT) {
+		if is_key_held(.RIGHT) {
 			cmd := edit.Command.Right
-			if IsShiftDown() && IsControlDown() {
+			if is_shift_down() && is_ctrl_down() {
 				cmd = .Select_Word_Right
-			} else if IsControlDown() {
+			} else if is_ctrl_down() {
 				cmd = .Word_Right
-			} else if IsShiftDown() {
+			} else if is_shift_down() {
 				cmd = .Select_Right
 			}
 			edit.perform_command(&state, cmd)
@@ -121,17 +121,17 @@ main :: proc() {
 
 		/* Deleting characters. `Backspace` deletes before the caret, `Delete` after
 		   - Ctrl + key deletes entire word in the respective direction */
-		if IsKeyHeld(.BACKSPACE) {
+		if is_key_held(.BACKSPACE) {
 			cmd := edit.Command.Backspace
-			if IsControlDown() {
+			if is_ctrl_down() {
 				cmd = .Delete_Word_Left
 			}
 			edit.perform_command(&state, cmd)
 		}
 
-		if IsKeyHeld(.DELETE) {
+		if is_key_held(.DELETE) {
 			cmd := edit.Command.Delete
-			if IsControlDown() {
+			if is_ctrl_down() {
 				cmd = .Delete_Word_Right
 			}
 			edit.perform_command(&state, cmd)
