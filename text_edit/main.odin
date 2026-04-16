@@ -4,8 +4,8 @@ package main
 	core:text/edit example
 
 	This core package provides procedures for implementing 
-	famously difficult text input fields. This is a simple example
-	showcasing how to create a single line text edit field.
+	text input fields. This is a simple example showcasing 
+	how to create a single line text edit field.
 */
 
                           // Using the packages below for:
@@ -31,11 +31,8 @@ IsShiftDown :: proc() -> bool {
 }
 
 main :: proc() {
-	/* Creating a window.
-	   Using "defer" just after that to remember
-	   to close the window! */
+	/* Creating a window. */
 	rl.InitWindow(1024, 800, "core:text/edit example")
-	defer rl.CloseWindow()
 
 	/* Initialising string builder
 	   for dynamically creating strings
@@ -51,13 +48,11 @@ main :: proc() {
 	/* Initialise the edit state, we pass default allocator
 	   for undo data */
 	edit.init(&state, context.allocator, context.allocator)
-	defer edit.destroy(&state) // don't forget to destroy at the end!
 
 	/* Before editing we need to tell the state that this is what we're editing.
 	   Note that we're NOT calling it every frame (as in every loop iteration),
 	   although the documentation might suggest otherwise. */
 	edit.begin(&state, 1, &builder)
-	defer edit.end(&state) // again, don't forget to end!
 
 	/* Main loop */
 	for !rl.WindowShouldClose() {
@@ -169,7 +164,7 @@ main :: proc() {
 		   the width as the absolute value of the difference. */
 
 		/* Main drawing section
-		   Without it your program won't run! Keep that in mind if you're learning raylib. */
+		   Keep that in mind if you're learning raylib, because without it, your program will freeze! */
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.WHITE)
 
@@ -188,4 +183,13 @@ main :: proc() {
 			
 		rl.EndDrawing()
 	}
+	/* We call this procedure to signal that we're done editing
+	   that input field */
+	edit.end(&state)
+
+	/* At the end of the program, release the resources allocated at the start */
+	edit.destroy(&state)
+
+	/* Finally, close window */
+	rl.CloseWindow()
 }
